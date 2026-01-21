@@ -1,6 +1,6 @@
 import pygame
 import random
-
+import math
 
 #inicializa pygame
 pygame.init()
@@ -10,7 +10,7 @@ pantalla = pygame.display.set_mode((800, 600))
 
 #titulo e Icono
 pygame.display.set_caption("Invasión Espacial")
-icono = pygame.image.load('ovni.png')
+icono = pygame.image.load('ovni_alien.png')
 pygame.display.set_icon(icono)
 mi_fondo = pygame.image.load('espacio.png')
 
@@ -23,9 +23,9 @@ jugador_x_cambio = 0
 
 #Variables del enemigo
 img_enemigo = pygame.image.load('alien2.png')
-enemigo_x = random.randint(0,536)
+enemigo_x = random.randint(0,736)
 enemigo_y = random.randint(50,200)
-enemigo_x_cambio = 1
+enemigo_x_cambio = 0.5
 enemigo_y_cambio = 50
 
 #Variables de la Bala
@@ -33,10 +33,9 @@ img_bala= pygame.image.load('bala.png')
 bala_x = 0
 bala_y = 500
 bala_x_cambio = 0
-bala_y_cambio = 1
+bala_y_cambio = 3
 bala_visible = False
-
-
+puntaje = 0
 
 #funcion Jugador
 def jugardor(x,y):
@@ -52,6 +51,14 @@ def disparar_bala(x, y):
     bala_visible = True
     pantalla.blit(img_bala, (x + 16, y + 10))
 
+# Funcion detectar colisiones
+def hay_colision(x_1, y_1, x_2, y_2):
+    distancia = math.sqrt(math.pow(x_1 - x_2,2) + math.pow(y_2 - y_1,2))
+    if distancia < 27:
+        return True
+    else:
+        return False
+
 #loop del Juego
 se_ejecuta = True
 while se_ejecuta:
@@ -61,6 +68,7 @@ while se_ejecuta:
 
     #Iterar Evento
     for event in pygame.event.get():
+
         #Cerrar Venta
          if event.type == pygame.QUIT:
              se_ejecuta = False
@@ -73,8 +81,10 @@ while se_ejecuta:
                  jugador_x_cambio = 1
              if event.key == pygame.K_SPACE:
                  if not bala_visible:
-                     bala_x = jugador_x
-                     disparar_bala(bala_x, bala_y)
+                    bala_x = jugador_x
+                    disparar_bala(bala_x, bala_y)
+
+
 
         #Evento soltar teclas
          if event.type == pygame.KEYUP:
@@ -101,7 +111,7 @@ while se_ejecuta:
         enemigo_x_cambio = -1
         enemigo_y += enemigo_y_cambio
 
-    #Movismiento Bala
+    #Movimiento Bala
     if bala_y <= -64:
         bala_y = 500
         bala_visible = False
@@ -109,6 +119,16 @@ while se_ejecuta:
     if bala_visible:
         disparar_bala(bala_x, bala_y)
         bala_y -= bala_y_cambio
+
+    # colision
+    colision = hay_colision(enemigo_x,  enemigo_y, bala_x, bala_y)
+    if colision:
+        bala_y = 500
+        bala_visible = False
+        puntaje += 1
+        print(puntaje)
+        enemigo_x = random.randint(0, 736)
+        enemigo_y = random.randint(50, 200)
 
     jugardor(jugador_x,jugador_y)
     enemigo(enemigo_x,enemigo_y)
