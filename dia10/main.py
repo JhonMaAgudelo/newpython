@@ -1,3 +1,4 @@
+import evento
 import pygame
 import random
 import math
@@ -43,12 +44,15 @@ for e in range(cantidad_enemigos):
     enemigo_y_cambio.append(50)
 
 #Variables de la Bala
+balas = []
 img_bala= pygame.image.load('bala.png')
 bala_x = 0
 bala_y = 500
 bala_x_cambio = 0
 bala_y_cambio = 3
 bala_visible = False
+
+
 puntaje = 0
 fuente = pygame.font.Font('StrangerNight.ttf',32)
 texto_x = 10
@@ -111,9 +115,17 @@ while se_ejecuta:
                  jugador_x_cambio = -1
              if event.key == pygame.K_RIGHT:
                  jugador_x_cambio = 1
+             # Disparar bala
              if event.key == pygame.K_SPACE:
-                 sonido_bala = mixer.Sound('disparo.mp3')
+                 sonido_bala = mixer.Sound("disparo.mp3")
                  sonido_bala.play()
+                 nueva_bala = {
+                     "x": jugador_x,
+                     "y": jugador_y,
+                     "velocidad": -5
+                 }
+                 balas.append(nueva_bala)
+
                  if not bala_visible:
                     bala_x = jugador_x
                     disparar_bala(bala_x, bala_y)
@@ -154,22 +166,25 @@ while se_ejecuta:
             enemigo_y[e] += enemigo_y_cambio[e]
 
         # colision
-        colision = hay_colision(enemigo_x[e], enemigo_y[e], bala_x, bala_y)
-        if colision:
-            sonido_colision = mixer.Sound('golpe.mp3')
-            sonido_colision.play()
-            bala_y = 500
-            bala_visible = False
-            puntaje += 1
-            enemigo_x[e] = random.randint(0, 736)
-            enemigo_y[e] = random.randint(50, 200)
+        for bala in balas:
+            colision_bala_enemigo = hay_colision(enemigo_x[e], enemigo_y[e], bala["x"], bala["y"])
+            if colision_bala_enemigo:
+                sonido_colision = mixer.Sound("Golpe.mp3")
+                sonido_colision.play()
+                balas.remove(bala)
+                puntaje += 1
+                enemigo_x[e] = random.randint(0, 736)
+                enemigo_y[e] = random.randint(20, 200)
+                break
 
-        enemigo(enemigo_x[e], enemigo_y[e],e)
+        enemigo(enemigo_x[e], enemigo_y[e], e)
 
     #Movimiento Bala
-    if bala_y <= -64:
-        bala_y = 500
-        bala_visible = False
+    for bala in balas:
+        bala["y"] += bala["velocidad"]
+        pantalla.blit(img_bala, (bala["x"] + 16, bala["y"] + 10))
+        if bala["y"] < 0:
+            balas.remove(bala)
 
     if bala_visible:
         disparar_bala(bala_x, bala_y)
